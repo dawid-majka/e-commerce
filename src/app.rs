@@ -2,6 +2,14 @@ use leptos::*;
 use leptos_meta::*;
 use leptos_router::*;
 
+use crate::dark_mode::{DarkModeToggle, DarkModeToggleProps, ToggleDarkMode};
+
+// register server functions if we are in ssr mode
+#[cfg(feature = "ssr")]
+pub fn register_server_functions() {
+    _ = ToggleDarkMode::register();
+}
+
 #[component]
 pub fn App(cx: Scope) -> impl IntoView {
     // Provides context that manages stylesheets, titles, meta tags, etc.
@@ -13,11 +21,12 @@ pub fn App(cx: Scope) -> impl IntoView {
         <Stylesheet id="leptos" href="/pkg/leptos_start.css"/>
 
         // sets the document title
-        <Title text="Welcome to Leptos"/>
+        <Title text="E-commerce"/>
 
         // content for this welcome page
         <Router>
             <main>
+                <DarkModeToggle/>
                 <Routes>
                     <Route path="" view=HomePage/>
                     <Route path="/*any" view=NotFound/>
