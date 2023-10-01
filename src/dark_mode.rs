@@ -93,7 +93,7 @@ pub fn DarkModeToggle(cx: Scope) -> impl IntoView {
 
     view! {cx,
         <Meta name="color-scheme" content=color_schema/>
-        <ActionForm action=toggle_dark_mode_action>
+        <ActionForm class="bg-black dark:bg-white text-white dark:text-black hover:bg-slate-600 px-5 py-3 rounded-lg" action=toggle_dark_mode_action>
             <input type="hidden" name="prefers_dark" value=move|| (!prefers_dark()).to_string()/>
             <input type="submit" value =move|| {
                 if prefers_dark() {

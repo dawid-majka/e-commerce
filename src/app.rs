@@ -25,7 +25,7 @@ pub fn App(cx: Scope) -> impl IntoView {
 
         // content for this welcome page
         <Router>
-            <main>
+        <main class="my-0 mx-auto max-w-3xl text-center">
                 <DarkModeToggle/>
                 <Routes>
                     <Route path="" view=HomePage/>
@@ -44,8 +44,8 @@ fn HomePage(cx: Scope) -> impl IntoView {
     let on_click = move |_| set_count.update(|count| *count += 1);
 
     view! { cx,
-        <h1>"Welcome to Leptos!"</h1>
-        <button on:click=on_click>"Click Me: " {count}</button>
+        <h1 class="p-6 text-4xl">"Welcome to Leptos and Tailwind"</h1>
+        <button class="bg-amber-600 hover:bg-sky-700 px-5 py-3 text-white rounded-lg" on:click=on_click>"Click Me: " {count}</button>
     }
 }
 
