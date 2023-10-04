@@ -1,5 +1,6 @@
 pub mod app;
 mod dark_mode;
+mod modal;
 use cfg_if::cfg_if;
 
 cfg_if! {

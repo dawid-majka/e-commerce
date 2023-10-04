@@ -2,7 +2,10 @@ use leptos::*;
 use leptos_meta::*;
 use leptos_router::*;
 
-use crate::dark_mode::{DarkModeToggle, DarkModeToggleProps, ToggleDarkMode};
+use crate::{
+    dark_mode::{DarkModeToggle, ToggleDarkMode},
+    modal::Modal,
+};
 
 // register server functions if we are in ssr mode
 #[cfg(feature = "ssr")]
@@ -27,6 +30,7 @@ pub fn App(cx: Scope) -> impl IntoView {
         <Router>
             <main>
                 <DarkModeToggle/>
+                <Modal/>
                 <Routes>
                     <Route path="" view=HomePage/>
                     <Route path="/*any" view=NotFound/>
