@@ -1,5 +1,9 @@
 pub mod app;
+mod components;
 mod dark_mode;
+mod modal;
+mod modal_provider;
+mod modal_state;
 use cfg_if::cfg_if;
 
 cfg_if! {
