@@ -3,8 +3,11 @@ use leptos_meta::*;
 use leptos_router::*;
 
 use crate::{
+    components::store_modal::StoreModal,
     dark_mode::{DarkModeToggle, ToggleDarkMode},
     modal::Modal,
+    modal_provider::ModalProvider,
+    modal_state::ModalState,
 };
 
 // register server functions if we are in ssr mode
@@ -18,6 +21,10 @@ pub fn App(cx: Scope) -> impl IntoView {
     // Provides context that manages stylesheets, titles, meta tags, etc.
     provide_meta_context(cx);
 
+    // Store Modal State Management
+    let modal_state = create_rw_signal(cx, ModalState::default());
+    provide_context(cx, modal_state);
+
     view! { cx,
         // injects a stylesheet into the document <head>
         // id=leptos means cargo-leptos will hot-reload this stylesheet
@@ -30,7 +37,7 @@ pub fn App(cx: Scope) -> impl IntoView {
         <Router>
             <main>
                 <DarkModeToggle/>
-                <Modal/>
+                <ModalProvider/>
                 <Routes>
                     <Route path="" view=HomePage/>
                     <Route path="/*any" view=NotFound/>
