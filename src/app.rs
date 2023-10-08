@@ -3,9 +3,7 @@ use leptos_meta::*;
 use leptos_router::*;
 
 use crate::{
-    components::store_modal::StoreModal,
     dark_mode::{DarkModeToggle, ToggleDarkMode},
-    modal::Modal,
     modal_provider::ModalProvider,
     modal_state::ModalState,
 };
@@ -23,6 +21,7 @@ pub fn App(cx: Scope) -> impl IntoView {
 
     // Store Modal State Management
     let modal_state = create_rw_signal(cx, ModalState::default());
+    modal_state.update(|state| state.is_open = true);
     provide_context(cx, modal_state);
 
     view! { cx,
