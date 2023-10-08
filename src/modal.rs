@@ -1,7 +1,4 @@
-use leptos::{
-    html::{Dialog, Div},
-    *,
-};
+use leptos::{html::Dialog, *};
 
 use crate::modal_state::ModalState;
 
@@ -23,11 +20,6 @@ pub fn Modal(cx: Scope, children: Children, title: String, description: String) 
         }
     });
 
-    let dialog_view = move || match is_open() {
-        true => view! {cx, <p>This modal is working</p>},
-        false => view! {cx, <p></p>},
-    };
-
     view! {cx,
             <dialog node_ref=dialog_ref>
             <div class="dialog_content">
@@ -36,11 +28,7 @@ pub fn Modal(cx: Scope, children: Children, title: String, description: String) 
                     <div class="dialog_description">{description}</div>
                 </div>
                 <div>
-                <button autofocus on:click=move|_| {
-                    log!("closing");
-                        state.update(|st| st.is_open = false);
-                    }>Close</button>
-                {dialog_view}
+                    {children(cx)}
                 </div>
             </div>
             </dialog>
