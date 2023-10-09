@@ -1,4 +1,4 @@
-use leptos::*;
+use leptos::{logging::log, *};
 use leptos_router::{ActionForm, FromFormData};
 use web_sys::SubmitEvent;
 
@@ -11,10 +11,10 @@ pub async fn create_store(name: String) -> Result<(), ServerFnError> {
 }
 
 #[component]
-pub fn StoreModal(cx: Scope) -> impl IntoView {
-    let state = use_context::<RwSignal<ModalState>>(cx).expect("state to have been provided");
+pub fn StoreModal() -> impl IntoView {
+    let state = use_context::<RwSignal<ModalState>>().expect("state to have been provided");
 
-    let create_store = create_server_action::<CreateStore>(cx);
+    let create_store = create_server_action::<CreateStore>();
     let on_submit = move |ev: SubmitEvent| {
         log!("Validation of the form");
 
@@ -27,7 +27,7 @@ pub fn StoreModal(cx: Scope) -> impl IntoView {
         }
     };
 
-    view! { cx,
+    view! {
         <Modal title="Create store".to_string() description="Add a new store".to_string()>
             <div class="space-y-4 py-2 pb-4">
                 <ActionForm action=create_store on:submit=on_submit>
