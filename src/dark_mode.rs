@@ -12,12 +12,12 @@ use leptos_router::ActionForm;
 // Called from frontend - executed on backend
 // Be careful, this server functions are not protected
 #[server(ToggleDarkMode, "/api")]
-pub async fn toggle_dark_mode(cx: Scope, prefers_dark: bool) -> Result<bool, ServerFnError> {
+pub async fn toggle_dark_mode(prefers_dark: bool) -> Result<bool, ServerFnError> {
     use actix_web::http::header::{HeaderMap, HeaderValue, SET_COOKIE};
     use leptos_actix::{ResponseOptions, ResponseParts};
 
     // Creating response and setting cookie with color mode data
-    let response = use_context::<ResponseOptions>(cx).expect("to have ResponseOptions provided");
+    let response = use_context::<ResponseOptions>().expect("to have ResponseOptions provided");
     let mut response_parts = ResponseParts::default();
     let mut headers = HeaderMap::new();
     headers.insert(
@@ -34,7 +34,7 @@ pub async fn toggle_dark_mode(cx: Scope, prefers_dark: bool) -> Result<bool, Ser
 // for client side
 // check if cookies present in csr side
 #[cfg(not(feature = "ssr"))]
-fn initial_prefers_dark(cx: Scope) -> bool {
+fn initial_prefers_dark() -> bool {
     use wasm_bindgen::JsCast;
 
     let doc = document().unchecked_into::<web_sys::HtmlDocument>();
@@ -45,9 +45,9 @@ fn initial_prefers_dark(cx: Scope) -> bool {
 // for server side
 // check if cookies present in ssr side
 #[cfg(feature = "ssr")]
-fn initial_prefers_dark(cx: Scope) -> bool {
+fn initial_prefers_dark() -> bool {
     // leptos_actix gives us access to request
-    use_context::<actix_web::HttpRequest>(cx)
+    use_context::<actix_web::HttpRequest>()
         .and_then(|req| {
             req.cookies()
                 .map(|cookies| {
@@ -62,10 +62,10 @@ fn initial_prefers_dark(cx: Scope) -> bool {
 
 ///Renders dark mode button
 #[component]
-pub fn DarkModeToggle(cx: Scope) -> impl IntoView {
-    let initial = initial_prefers_dark(cx);
+pub fn DarkModeToggle() -> impl IntoView {
+    let initial = initial_prefers_dark();
 
-    let toggle_dark_mode_action = create_server_action::<ToggleDarkMode>(cx);
+    let toggle_dark_mode_action = create_server_action::<ToggleDarkMode>();
 
     // input is `Some(value)` when pending, and `None` if not pending
     let input = toggle_dark_mode_action.input();
@@ -91,7 +91,7 @@ pub fn DarkModeToggle(cx: Scope) -> impl IntoView {
         }
     };
 
-    view! {cx,
+    view! {
         <Meta name="color-scheme" content=color_schema/>
         <ActionForm class="bg-black dark:bg-white text-white dark:text-black hover:bg-slate-600 px-5 py-3 rounded-lg" action=toggle_dark_mode_action>
             <input type="hidden" name="prefers_dark" value=move|| (!prefers_dark()).to_string()/>
