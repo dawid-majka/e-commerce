@@ -3,16 +3,26 @@
 async fn main() -> std::io::Result<()> {
     use actix_files::Files;
     use actix_web::*;
+    use dotenv::dotenv;
     use leptos::*;
     use leptos_actix::{generate_route_list, LeptosRoutes};
     use leptos_start::app::*;
+    use sqlx::PgPool;
+
+    dotenv().ok();
 
     let conf = get_configuration(None).await.unwrap();
     let addr = conf.leptos_options.site_addr;
     // Generate the list of routes in your Leptos App
     let routes = generate_route_list(|| view! { <App/> });
 
-    
+    let db_url =
+        std::env::var("DATABASE_URL").expect(".env file should contain DATABASE_URL string");
+    let connection_pool = PgPool::connect(&db_url)
+        .await
+        .expect("Failed to connect to Postgres.");
+
+    let connection = web::Data::new(connection_pool);
 
     HttpServer::new(move || {
         let leptos_options = &conf.leptos_options;
@@ -32,6 +42,7 @@ async fn main() -> std::io::Result<()> {
                 || view! { <App/> },
             )
             .app_data(web::Data::new(leptos_options.to_owned()))
+            .app_data(connection.clone())
         //.wrap(middleware::Compress::default())
     })
     .bind(&addr)?
