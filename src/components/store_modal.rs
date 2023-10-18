@@ -1,12 +1,16 @@
 use leptos::{logging::log, *};
 use leptos_router::{ActionForm, FromFormData};
+use uuid::Uuid;
 use web_sys::SubmitEvent;
 
 use crate::{modal::Modal, modal_state::ModalState};
 
 #[server(CreateStore, "/api")]
-pub async fn create_store(name: String) -> Result<(), ServerFnError> {
-    println!("Create store api has been called with name: {}", name);
+pub async fn create_store(name: String, user_id: String) -> Result<(), ServerFnError> {
+    println!(
+        "Create store api has been called with name: {} and userId: {}",
+        name, user_id
+    );
 
     use actix_web::web::Data;
     use chrono::Utc;
@@ -14,7 +18,7 @@ pub async fn create_store(name: String) -> Result<(), ServerFnError> {
     use sqlx::PgPool;
     use uuid::Uuid;
 
-    extract(|pool: Data<PgPool>| async move {
+    extract(move |pool: Data<PgPool>| async move {
         match sqlx::query!(
             r#"
             INSERT INTO stores (id, name, userId, createdAt, updatedAt)
@@ -22,7 +26,7 @@ pub async fn create_store(name: String) -> Result<(), ServerFnError> {
             "#,
             Uuid::new_v4(),
             name,
-            Uuid::new_v4(),
+            Uuid::parse_str(&user_id).unwrap(),
             Utc::now(),
             Utc::now()
         )
@@ -31,8 +35,8 @@ pub async fn create_store(name: String) -> Result<(), ServerFnError> {
         {
             Ok(_) => {
                 println!("Store created succesfully");
-    Ok(())
-}
+                Ok(())
+            }
             Err(e) => {
                 println!("Error during store creation");
                 Err(ServerFnError::ServerError(e.to_string()))
@@ -52,6 +56,9 @@ pub fn StoreModal() -> impl IntoView {
     let pending = create_store.pending();
     let has_error = move || value.with(|val| matches!(val, Some(Err(_))));
 
+    let user_id = use_context::<Uuid>().expect("User to be logged in");
+    let user_id = user_id.to_string();
+
     let on_submit = move |ev: SubmitEvent| {
         log!("Validation of the form");
 
@@ -62,6 +69,8 @@ pub fn StoreModal() -> impl IntoView {
             log!("error");
             ev.prevent_default();
         }
+
+        // TODO: Modal should be closed after SubmitEvent
     };
 
     view! {
@@ -71,6 +80,7 @@ pub fn StoreModal() -> impl IntoView {
                     <label>
                         <p>"Name"</p>
                         <input disabled=pending type="text" name="name"/>
+                        <input type="hidden" name="user_id" value=user_id/>
                     </label>
                     <div class="pt-6 space-x-2 flex items-center justify-end w-full">
                         // <input type="submit" value="Continue"/>

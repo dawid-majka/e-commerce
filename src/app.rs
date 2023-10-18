@@ -1,8 +1,14 @@
-use leptos::*;
+use leptos::{logging::log, *};
 use leptos_meta::*;
 use leptos_router::*;
+use uuid::Uuid;
 
-use crate::{dark_mode::DarkModeToggle, modal_provider::ModalProvider, modal_state::ModalState};
+use crate::{
+    dark_mode::DarkModeToggle,
+    dashboard_layout::{DashboardLayout, Store},
+    modal_provider::ModalProvider,
+    modal_state::ModalState,
+};
 
 // // register server functions if we are in ssr mode
 // #[cfg(feature = "ssr")]
@@ -15,9 +21,14 @@ pub fn App() -> impl IntoView {
     // Provides context that manages stylesheets, titles, meta tags, etc.
     provide_meta_context();
 
+    // mocked for now
+    let user_id = Uuid::parse_str("2a2a1b23-d850-4e02-94df-71cc0e648d9e")
+        .expect("Parsing user id is succesfull");
+    provide_context(user_id);
+
     // Store Modal State Management
     let modal_state = create_rw_signal(ModalState::default());
-    modal_state.update(|state| state.is_open = true);
+
     provide_context(modal_state);
 
     view! {
@@ -35,6 +46,7 @@ pub fn App() -> impl IntoView {
                 <ModalProvider/>
                 <Routes>
                     <Route path="" view=HomePage/>
+                     <Route path="/store/:id" view=DashboardLayout/>
                     <Route path="/*any" view=NotFound/>
                 </Routes>
             </main>
@@ -45,14 +57,77 @@ pub fn App() -> impl IntoView {
 /// Renders the home page of your application.
 #[component]
 fn HomePage() -> impl IntoView {
-    // Creates a reactive value to update the button
-    let (count, set_count) = create_signal(0);
-    let on_click = move |_| set_count.update(|count| *count += 1);
+    let user_id = use_context::<Uuid>();
 
-    view! {
-        <h1 class="p-6 text-4xl">"Welcome to Leptos and Tailwind"</h1>
-        <button class="bg-amber-600 hover:bg-sky-700 px-5 py-3 text-white rounded-lg" on:click=on_click>"Click Me: " {count}</button>
+    let navigate = leptos_router::use_navigate();
+
+    match user_id {
+        Some(id) => {
+            let store =
+                create_blocking_resource(|| (), move |_| async move { get_store(id).await });
+
+            create_effect(move |_| match store.get() {
+                Some(store) => match store {
+                    Ok(store) => {
+                        log!("trying to navigate to /store/:{}", store.id);
+                        navigate(&format!("/store/{}", store.id), Default::default());
+                    }
+                    Err(e) => {
+                        println!("Error getting store: {e}");
+                        let state = use_context::<RwSignal<ModalState>>()
+                            .expect("state to have been provided");
+                        state.update(|state| state.is_open = true);
+                    }
+                },
+                None => {
+                    let state =
+                        use_context::<RwSignal<ModalState>>().expect("state to have been provided");
+                    state.update(|state| state.is_open = true);
+                }
+            });
+            return view! {};
+        }
+        None => {
+            navigate("/sign-in", Default::default());
+        }
     }
+
+    view! {}
+}
+
+#[server(GetStore, "/api")]
+pub async fn get_store(user_id: Uuid) -> Result<Store, ServerFnError> {
+    use actix_web::web::Data;
+    use leptos_actix::extract;
+    use sqlx::PgPool;
+
+    println!("Get store has been called with userId: {}", user_id);
+
+    let data = extract(move |pool: Data<PgPool>| async move {
+        match sqlx::query_as::<_, Store>(&format!(
+            r#"
+            SELECT id, name, userid, createdat, updatedat
+            FROM stores
+            WHERE userId = $1
+            "#,
+        ))
+        .bind(user_id)
+        .fetch_one(pool.get_ref())
+        .await
+        {
+            Ok(row) => {
+                println!("store found: {:?}", row);
+                Ok(row)
+            }
+            Err(e) => {
+                println!("no store found, error: {}", e.to_string());
+                Err(ServerFnError::ServerError(e.to_string()))
+            }
+        }
+    })
+    .await;
+
+    data?
 }
 
 /// 404 - Not Found

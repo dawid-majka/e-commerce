@@ -1,6 +1,7 @@
 pub mod app;
 mod components;
 mod dark_mode;
+mod dashboard_layout;
 mod modal;
 mod modal_provider;
 mod modal_state;
